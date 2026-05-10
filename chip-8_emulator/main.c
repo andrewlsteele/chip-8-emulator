@@ -59,7 +59,7 @@ char emulation_type = 'c'; // "c" for Chip-8, "s" for Super-Chip, "x" for XO-Chi
 bool step_through = false;
 
 char filepath[] =
-	"C:\\Users\\astee\\source\\repos\\chip-8_emulator\\ROMs\\superpong.ch8";
+	"C:\\Users\\astee\\source\\repos\\chip-8_emulator\\ROMs\\octojam1title.ch8";
 
 void stack_push(short push_value)
 {
@@ -228,6 +228,7 @@ void copy_ROM_to_memory()
 
 void update_display(short instruction)
 {
+	// Instruction = 0xDXYN
 	if (register_v[(instruction & 0x0F00) >> 8] < 64)
 	{
 		x_coord = register_v[(instruction & 0x0F00) >> 8];
@@ -255,6 +256,10 @@ void update_display(short instruction)
 			{
 				break;
 			}
+			/*if (((memory[index_register + j] >> (7 - i)) & 0b00000001) == 1)
+			{
+				display[y_coord + j][x_coord + i] = !display[y_coord + j][x_coord + i];
+			}*/
 			if (display[y_coord+j][x_coord+i] == false
 				&& ((memory[index_register + j] >> (7 - i)) & 0b00000001) == 1)
 			{
@@ -413,6 +418,9 @@ void process_keyup_event(SDL_KeyboardEvent* key)
 		keypad[0xF] = false;
 		key_pressed_FX0A = 0xF;
 		break;
+	case SDL_SCANCODE_L:
+		step_through = true;
+		break;
 	}
 }
 
@@ -477,6 +485,7 @@ void execute_eight_instructions(short instruction)
 		// 8XY4: Add the value of register VY to register VX
 		// Set VF to 01 if a carry occurs
 		// Set VF to 00 if a carry does not occur
+		// !!! Can remove this if statement and replace with a floor division
 		if ((int)(register_v[(instruction & 0x0F00) >> 8] + register_v[(instruction & 0x00F0) >> 4]) > 0xFF)
 		{
 			register_v[(instruction & 0x0F00) >> 8] = register_v[(instruction & 0x0F00) >> 8] + register_v[(instruction & 0x00F0) >> 4];
@@ -490,9 +499,10 @@ void execute_eight_instructions(short instruction)
 		break;
 
 	case 5:
-		// 8XY5: Subtract the value of register VY from register VX
+		// 8XY5: Subtract the value of register VY from register VX (VX-VY)
 		// Set VF to 00 if a borrow occurs
 		// Set VF to 01 if a borrow does not occur
+		// !!! Can take register_v... statements out of if statement as they're the same in both branches
 		if (register_v[(instruction & 0x0F00) >> 8] < register_v[(instruction & 0x00F0) >> 4])
 		{
 			register_v[(instruction & 0x0F00) >> 8] = register_v[(instruction & 0x0F00) >> 8] - register_v[(instruction & 0x00F0) >> 4];
@@ -515,7 +525,7 @@ void execute_eight_instructions(short instruction)
 		break;
 
 	case 7:
-		// 8XY7: Set register VX to the value of VY minus VX
+		// 8XY7: Set register VX to the value of VY minus VX (VY-VX)
 		// Set VF to 00 if a borrow occurs
 		// Set VF to 01 if a borrow does not occur
 		if (register_v[(instruction & 0x0F00) >> 8] > register_v[(instruction & 0x00F0) >> 4])
@@ -754,12 +764,16 @@ void process_not_step_through()
 {
 	timespec_return = timespec_get(&ts, TIME_UTC);
 	end_time = ts.tv_nsec;
-	time_since_fetch = end_time - start_time;
-	if (time_since_fetch < 0)
+
+	// ts.tv_nsec returns an integer between 0 and 999999999 inclusive, meaning every second, this resets to 0
+	if (end_time < start_time)
 	{
-		start_time = ts.tv_nsec;
-		time_since_fetch = end_time - start_time;
+		start_time -= 999999999; 
+		// If there has been more than 1 second's delay, this shouldn't matter assuming the period is less than this.
 	}
+
+	time_since_fetch = end_time - start_time;
+
 	if ((float)time_since_fetch / (float)1000000000 > CLOCK_PERIOD)
 	{
 		cur_instruction = (memory[program_counter] << 8) | (memory[program_counter + 1]);
@@ -824,6 +838,7 @@ DWORD WINAPI SDL_worker_thread()
 	SDL_SetRenderDrawColor(renderer, 79, 58, 42, 255);
 	SDL_RenderClear(renderer);
 	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+	Mix_Volume(-1, 25);
 	beep_sound = Mix_LoadWAV("C:\\Users\\astee\\source\\repos\\chip-8_emulator\\beep-01b.wav");
 	if (window == NULL)
 	{
