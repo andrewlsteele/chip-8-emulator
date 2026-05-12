@@ -59,7 +59,7 @@ char emulation_type = 'c'; // "c" for Chip-8, "s" for Super-Chip, "x" for XO-Chi
 bool step_through = false;
 
 char filepath[] =
-	"C:\\Users\\astee\\source\\repos\\chip-8_emulator\\ROMs\\octojam1title.ch8";
+	"..\\ROMs\\octojam1title.ch8";
 
 void stack_push(short push_value)
 {
@@ -229,22 +229,25 @@ void copy_ROM_to_memory()
 void update_display(short instruction)
 {
 	// Instruction = 0xDXYN
-	if (register_v[(instruction & 0x0F00) >> 8] < 64)
-	{
-		x_coord = register_v[(instruction & 0x0F00) >> 8];
-	}
-	else
-	{
-		x_coord = register_v[(instruction & 0x0F00) >> 8] % 64;
-	}
-	if (register_v[(instruction & 0x00F0) >> 4] < 32)
-	{
-		y_coord = register_v[(instruction & 0x00F0) >> 4];
-	}
-	else
-	{
-		y_coord = register_v[(instruction & 0x00F0) >> 4] % 32;
-	}
+	x_coord = register_v[(instruction & 0x0F00) >> 8] % 64;
+	y_coord = register_v[(instruction & 0x00F0) >> 4] % 32;
+
+	//if (register_v[(instruction & 0x0F00) >> 8] < 64)
+	//{
+	//	x_coord = register_v[(instruction & 0x0F00) >> 8];
+	//}
+	//else
+	//{
+	//	x_coord = register_v[(instruction & 0x0F00) >> 8] % 64;
+	//}
+	//if (register_v[(instruction & 0x00F0) >> 4] < 32)
+	//{
+	//	y_coord = register_v[(instruction & 0x00F0) >> 4];
+	//}
+	//else
+	//{
+	//	y_coord = register_v[(instruction & 0x00F0) >> 4] % 32;
+	//}
 
 	register_v[0xF] = 0x00;
 
