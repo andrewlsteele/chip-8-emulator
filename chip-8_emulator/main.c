@@ -238,15 +238,25 @@ void update_display(short instruction)
 	{
 		for (unsigned char j = 0; j < (instruction & 0x000F); j++)
 		{
-			if (x_coord + i >= 64 || y_coord + j >= 32)
+			// If attempted pixel draw is outside the y-axis range, exit the function entirely.
+			if (y_coord + j >= 32)
+			{
+				return;
+			}
+
+			// If attempted pixel draw is outside the x-axis range, skip only this loop.
+			if (x_coord + i >= 64)
 			{
 				break;
 			}
+
+			// If the pixel attempting to be drawn is a 0, move on.
 			if (((memory[index_register + j] >> (7 - i)) & 0b00000001) == 0)
 			{
 				continue;
 			}
 
+			// If a displayed pixel is turned off, set VF to 1. If no displayed pixels are turned off, set VF to 0.
 			if (display[y_coord + j][x_coord + i] == true) {
 				register_v[0xF] = 0x01;
 			}
