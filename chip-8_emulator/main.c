@@ -59,7 +59,7 @@ char emulation_type = 'c'; // "c" for Chip-8, "s" for Super-Chip, "x" for XO-Chi
 bool step_through = false;
 
 char filepath[] =
-	"..\\ROMs\\octojam1title.ch8";
+	"..\\ROMs\\5-quirks.ch8";
 
 void stack_push(short push_value)
 {
@@ -232,23 +232,6 @@ void update_display(short instruction)
 	x_coord = register_v[(instruction & 0x0F00) >> 8] % 64;
 	y_coord = register_v[(instruction & 0x00F0) >> 4] % 32;
 
-	//if (register_v[(instruction & 0x0F00) >> 8] < 64)
-	//{
-	//	x_coord = register_v[(instruction & 0x0F00) >> 8];
-	//}
-	//else
-	//{
-	//	x_coord = register_v[(instruction & 0x0F00) >> 8] % 64;
-	//}
-	//if (register_v[(instruction & 0x00F0) >> 4] < 32)
-	//{
-	//	y_coord = register_v[(instruction & 0x00F0) >> 4];
-	//}
-	//else
-	//{
-	//	y_coord = register_v[(instruction & 0x00F0) >> 4] % 32;
-	//}
-
 	register_v[0xF] = 0x00;
 
 	for (unsigned char i = 0; i < 8; i++)
@@ -259,21 +242,16 @@ void update_display(short instruction)
 			{
 				break;
 			}
-			/*if (((memory[index_register + j] >> (7 - i)) & 0b00000001) == 1)
+			if (((memory[index_register + j] >> (7 - i)) & 0b00000001) == 0)
 			{
-				display[y_coord + j][x_coord + i] = !display[y_coord + j][x_coord + i];
-			}*/
-			if (display[y_coord+j][x_coord+i] == false
-				&& ((memory[index_register + j] >> (7 - i)) & 0b00000001) == 1)
-			{
-				display[y_coord+j][x_coord+i] = true;
+				continue;
 			}
-			else if (display[y_coord+j][x_coord+i] == true
-				&& ((memory[index_register + j] >> (7 - i)) & 0b00000001) == 1)
-			{
-				display[y_coord+j][x_coord+i] = false;
+
+			if (display[y_coord + j][x_coord + i] == true) {
 				register_v[0xF] = 0x01;
 			}
+
+			display[y_coord + j][x_coord + i] = !display[y_coord + j][x_coord + i];
 		}
 		/*for (int y = 0; y < 32; y++)
 		{
